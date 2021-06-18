@@ -363,7 +363,7 @@ namespace Cct
 					void				onRelease(const PxBase& observed);
 					void				updateCachedShapesRegistration(PxU32 startIndex, bool unregister);
 
-		// observer notifications
+		// observer notifications   观察者通知
 					void				onObstacleRemoved(ObstacleHandle index);
 					void				onObstacleUpdated(ObstacleHandle index, const PxObstacleContext* context, const PxVec3& origin, const PxVec3& unitDir, const PxReal distance);
 					void				onObstacleAdded(ObstacleHandle index, const PxObstacleContext* context, const PxVec3& origin, const PxVec3& unitDir, const PxReal distance);
@@ -390,10 +390,12 @@ namespace Cct
 					float				mTouchedTriMax;
 					//PxTriangle		mTouchedTriangle;
 #endif
-					//
+					// CCT所站立的shape
 					TouchedObject<PxShape>		mTouchedShape;		// Shape on which the CCT is standing
 					TouchedObject<PxRigidActor>	mTouchedActor;		// Actor from touched shape
-					ObstacleHandle		mTouchedObstacleHandle;	// Obstacle on which the CCT is standing
+                    // CCT 所站立的障碍物
+					ObstacleHandle		mTouchedObstacleHandle;	// Obstacle on which the CCT is standing  
+                    // mTouchedShape/mTouchedObstacle 的最后已知位置
 					PxVec3				mTouchedPos;		// Last known position of mTouchedShape/mTouchedObstacle
 					// PT: TODO: union those
 					PxVec3				mTouchedPosShape_Local;

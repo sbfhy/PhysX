@@ -52,15 +52,15 @@ class PxObstacleContext;
 class PxControllerFilterCallback;
 
 /**
-\brief specifies debug-rendering flags
+\brief specifies debug-rendering flags  调试渲染的flags
 */
 struct PxControllerDebugRenderFlag
 {
 	enum Enum
 	{
-		eTEMPORAL_BV	= (1<<0),	//!< Temporal bounding volume around controllers
-		eCACHED_BV		= (1<<1),	//!< Cached bounding volume around controllers
-		eOBSTACLES		= (1<<2),	//!< User-defined obstacles
+		eTEMPORAL_BV	= (1<<0),	//!< Temporal bounding volume around controllers    // controller周围的暂时的边界体积
+		eCACHED_BV		= (1<<1),	//!< Cached bounding volume around controllers      // 缓存的
+		eOBSTACLES		= (1<<2),	//!< User-defined obstacles                         // 障碍物
 
 		eNONE			= 0,
 		eALL			= 0xffffffff

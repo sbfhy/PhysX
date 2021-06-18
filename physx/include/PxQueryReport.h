@@ -66,6 +66,7 @@ struct PxHitFlag
 		ePOSITION					= (1<<0),	//!< "position" member of #PxQueryHit is valid
 		eNORMAL						= (1<<1),	//!< "normal" member of #PxQueryHit is valid
 		eUV							= (1<<3),	//!< "u" and "v" barycentric coordinates of #PxQueryHit are valid. Not applicable to sweep queries.
+		// 当预先知道没有初始重叠时，sweep的性能提示标志。就是sweep的时候不检测初始位置 
 		eASSUME_NO_INITIAL_OVERLAP	= (1<<4),	//!< Performance hint flag for sweeps when it is known upfront there's no initial overlap.
 												//!< NOTE: using this flag may cause undefined results if shapes are initially overlapping.
 		eMESH_MULTIPLE				= (1<<5),	//!< Report all hits for meshes rather than just the first. Not applicable to sweep queries.

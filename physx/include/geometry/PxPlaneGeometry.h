@@ -44,15 +44,18 @@ namespace physx
 #endif
 
 /**
-\brief Class describing a plane geometry.
+\brief Class describing a plane geometry.   描述平面几何体的类
 
 The plane geometry specifies the half-space volume x<=0. As with other geometry types, 
 when used in a PxShape the collision volume is obtained by transforming the halfspace 
 by the shape local pose and the actor global pose.
+平面几何体指定半空间体积 x<=0。 
+与其他几何类型一样，当在 PxShape 中使用时，碰撞体积是通过用形状局部姿势和actor全局姿势变换半空间来获得的。
 
 To generate a PxPlane from a PxTransform, transform PxPlane(1,0,0,0).
-
+要从 PxTransform 生成 PxPlane，请转换 PxPlane(1,0,0,0)。
 To generate a PxTransform from a PxPlane, use PxTransformFromPlaneEquation.
+要从 PxPlane 生成 PxTransform，请使用 PxTransformFromPlaneEquation。
 
 @see PxShape.setGeometry() PxShape.getPlaneGeometry() PxTransformFromPlaneEquation 
 */
@@ -63,7 +66,6 @@ public:
 
 	/**
 	\brief Returns true if the geometry is valid.
-
 	\return True if the current settings are valid
 	*/
 	PX_INLINE bool isValid() const;

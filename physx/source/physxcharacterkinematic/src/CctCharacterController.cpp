@@ -1345,6 +1345,7 @@ void SweepTest::updateTouchedGeoms(	const InternalCBData_FindTouchedGeom* userDa
 }
 
 // This is the generic sweep test for all swept volumes, but not character-controller specific
+// 这是所有扫描体积的通用扫描测试，但不是特定于character-controller的
 bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 							InternalCBData_OnHit* userHitData,
 							const UserObstacles& userObstacles,
@@ -1355,6 +1356,7 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 {
 	// Early exit when motion is zero. Since the motion is decomposed into several vectors
 	// and this function is called for each of them, it actually happens quite often.
+    // 当运动为零时提前退出。 由于运动被分解为多个向量并且为每个向量调用此函数，因此它实际上经常发生。
 	if(direction.isZero())
 		return false;
 
@@ -1375,48 +1377,52 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 	while(max_iter--)
 	{
 		mNbIterations++;
-		// Compute current direction
+		// Compute current direction                计算当前方向
 		PxVec3 currentDirection = targetOrientation - currentPosition;
 
-		// Make sure the new TBV is still valid
+		// Make sure the new TBV is still valid     确保新的 TBV 仍然有效
 		{
 			// Compute temporal bounding box. We could use a capsule or an OBB instead:
-			// - the volume would be smaller
-			// - but the query would be slower
-			// Overall it's unclear whether it's worth it or not.
-			// TODO: optimize this part ?
+            // 计算时间边界框。 我们可以使用胶囊或 OBB 代替：
+			// - the volume would be smaller        体积会更小
+			// - but the query would be slower      但查询会更慢
+			// Overall it's unclear whether it's worth it or not.   总体来说值不值得还不得而知。
+			// TODO: optimize this part ?           优化这部分？
 			PxExtendedBounds3 temporalBox;
 			swept_volume.computeTemporalBox(*this, temporalBox, currentPosition, currentDirection);
 
-			// Gather touched geoms
+			// Gather touched geoms                 合并碰到的图形
 			updateTouchedGeoms(userData, userObstacles, temporalBox, filters, sideVector);
 		}
 
 		const float Length = currentDirection.magnitude();
-		if(Length<=min_dist) //Use <= to handle the case where min_dist is zero.
+		if(Length<=min_dist) //Use <= to handle the case where min_dist is zero.    可能会是0
 			break;
 
 		currentDirection /= Length;
 
 		// From Quake2: "if velocity is against the original velocity, stop dead to avoid tiny occilations in sloping corners"
+        // “如果速度与原始速度相反，则停止，以避免在倾斜的角落出现微小的振荡”
 		if((currentDirection.dot(direction)) <= 0.0f)
 			break;
 
 		// From this point, we're going to update the position at least once
+        // 从现在开始，我们将至少更新一次位置
 		hasMoved = true;
 
-		// Find closest collision
+		// Find closest collision   // 找到最近的碰撞
 		SweptContact C;
 		C.mDistance = Length + mUserParams.mContactOffset;
 
 		if(!CollideGeoms(this, swept_volume, mGeomStream, currentPosition, currentDirection, C, !mUserParams.mOverlapRecovery))
 		{
-			// no collision found => move to desired position
+			// no collision found => move to desired position   // 未发现碰撞 => 移动到所需位置
 			currentPosition = targetOrientation;
 			break;
 		}
 
 		PX_ASSERT(C.mGeom);	// If we reach this point, we must have touched a geom
+        // 如果走到了这点，那一定是碰到了一个geom
 
 		if(mUserParams.mOverlapRecovery && C.mDistance==0.0f)
 		{
@@ -1458,8 +1464,9 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 			if(sweepPass!=SWEEP_PASS_SENSOR)
 			{
 				// We touched a user object, typically another CCT, but can also be a user-defined obstacle
-
+                // 我们接触了一个用户对象，通常是另一个 CCT，但也可以是用户定义的障碍物
 				// PT: TODO: technically lines marked with (*) shouldn't be here... revisit later
+                // PT: TODO: 技术上标有 (*) 的行不应该在这里...以后再看
 
 				const PxObstacle* touchedObstacle = NULL;	// (*)
 				ObstacleHandle	touchedObstacleHandle = INVALID_OBSTACLE_HANDLE;
@@ -1507,7 +1514,7 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 			const PxRigidActor* touchedActor = C.mGeom->mActor;
 			PX_ASSERT(touchedActor);
 
-			// We touched a normal object
+			// We touched a normal object   // 我们碰到了一个普通的物体
 			if(sweepPass==SWEEP_PASS_DOWN)
 			{
 				mFlags &= ~(STF_TOUCH_OTHER_CCT|STF_TOUCH_OBSTACLE);
@@ -1523,6 +1530,12 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 				// TODO:  1. should we treat stationary kinematics the same as statics.
 				//		  2. should we treat all kinematics the same as statics.
 				//		  3. should we treat no kinematics the same as statics.
+                // 确定形状是附加到静态还是动态actor。
+                // 当前仅在静态 actor 上行走时考虑坡度限制。
+                // 对于附加到动力学和运动学的形状，它被忽略。
+                // TODO:  1. 我们是否应该像对待静力学一样对待静态运动学。
+                //        2. 我们是否应该将所有运动学视为静力学。
+                //        3. 我们是否应该将运动学视为静力学。
 				if((touchedActor->getConcreteType() == PxConcreteType::eRIGID_STATIC) && (C.mInternalIndex!=PX_INVALID_U32))
 				{
 					mFlags |= STF_VALIDATE_TRIANGLE_DOWN;
@@ -1547,7 +1560,7 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 					touchedTri.normal(mContactNormalDownPass);
 				}
 #endif
-				// Update touched shape in down pass
+				// Update touched shape in down pass    // 更新向下传递的触摸形状
 				touchedShapeOut = const_cast<PxShape*>(touchedShape);
 				touchedActorOut = touchedActor;
 //				mTouchedPos = getShapeGlobalPose(*touchedShape).p;
@@ -1585,6 +1598,11 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 			//   like the character is standing on the other character's head, it looks bad. So, here, we would like to let the CCT
 			//   slide away, i.e. we don't want friction.
 			// So here we simply increase the number of iterations (== let the CCT slide) when the first down collision is with another CCT.
+            // 尝试解决以下问题：
+            // - 默认情况下，CCT“摩擦”是无限的，即 CCT 不会在斜坡上滑动（这是设计使然）
+            // - 当一个胶囊 CCT 站在另一个胶囊 CCT 的顶部而不滑动时，这会产生不好的结果。 
+            //   从视觉上看，角色好像站在另一个角色的头上，看起来很糟糕。 所以，在这里，我们想让 CCT 滑开，即我们不想要摩擦。
+            // 所以这里我们只是在第一次向下碰撞是与另一个 CCT 时增加迭代次数（== 让 CCT 滑动）。
 			if(!NbCollisions)
 				max_iter += 9;
 //				max_iter += 1;
@@ -1611,6 +1629,8 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 		{
 			// Make sure the auto-step doesn't bypass this !
 			// PT: cancel out normal compo
+            // 确保自动步骤不会绕过这个！
+            // PT: 取消正常组合
 //			WorldNormal[mUserParams.mUpDirection]=0.0f;
 //			WorldNormal.normalize();
 			PxVec3 normalCompo, tangentCompo;
@@ -1619,7 +1639,7 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 			WorldNormal.normalize();
 		}
 
-		const float Bump = 0.0f;	// ### doesn't work when !=0 because of Quake2 hack!
+		const float Bump = 0.0f;	// ### doesn't work when !=0 because of Quake2 hack!  // 由于 Quake2 hack，当 !=0 时不起作用！
 		const float Friction = 1.0f;
 		collisionResponse(targetOrientation, currentPosition, currentDirection, WorldNormal, Bump, Friction, (mFlags & STF_NORMALIZE_RESPONSE)!=0);
 	}
@@ -1627,17 +1647,18 @@ bool SweepTest::doSweepTest(const InternalCBData_FindTouchedGeom* userData,
 	if(nb_collisions)
 		*nb_collisions = NbCollisions;
 
-	// Final box position that should be reflected in the graphics engine
+	// Final box position that should be reflected in the graphics engine   // 应在图形引擎中反映的最终框位置
 	swept_volume.mCenter = currentPosition;
 
 	// If we didn't move, don't update the box position at all (keeping possible lazy-evaluated structures valid)
+    // 如果我们没有移动，则根本不更新框位置（保持可能的惰性求值结构有效
 	return hasMoved;
 }
 
-// ### have a return code to tell if we really moved or not
-
-// Using swept code & direct position update (no physics engine)
-// This function is the generic character controller logic, valid for all swept volumes
+// ### have a return code to tell if we really moved or not  有一个返回码来判断我们是否真的移动了
+// Using swept code & direct position update (no physics engine)    使用扫描代码和直接位置更新（无物理引擎）
+// This function is the generic character controller logic, valid for all swept volumes 
+// 此函数是通用字符控制器逻辑，对所有扫描体积有效
 PxControllerCollisionFlags SweepTest::moveCharacter(
 					const InternalCBData_FindTouchedGeom* userData,
 					InternalCBData_OnHit* userHitData,
@@ -1664,7 +1685,7 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 	const PxU32 maxIterDown = ((mFlags & STF_WALK_EXPERIMENT) && mUserParams.mNonWalkableMode==PxControllerNonWalkableMode::ePREVENT_CLIMBING_AND_FORCE_SLIDING) ? maxIter : 1;
 //	const PxU32 maxIterDown = 1;
 
-	// ### this causes the artificial gap on top of chars
+	// ### this causes the artificial gap on top of chars   这会导致字符顶部的人为间隙
 	float stepOffset = mUserParams.mStepOffset;	// Default step offset can be cancelled in some cases.
 
 	// Save initial height
@@ -1672,7 +1693,8 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 	const PxExtended originalHeight = volume.mCenter.dot(upDirection);
     const PxExtended originalBottomPoint = originalHeight - PxExtended(volume.mHalfHeight);	// UBI
 
-	// TEST! Disable auto-step when flying. Not sure this is really useful.
+	// TEST! Disable auto-step when flying. Not sure this is really useful. 
+    // 测试！ 飞行时禁用自动步进。 不确定这是否真的有用。
 //	if(direction[upDirection]>0.0f)
 	const float dir_dot_up = direction.dot(upDirection);
 //printf("%f\n", dir_dot_up);
@@ -1683,7 +1705,11 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 		// PT: this makes it fail on a platform moving up when jumping
 		// However if we don't do that a jump when moving up a slope doesn't work anymore!
 		// Not doing this also creates jittering when a capsule CCT jumps against another capsule CCT
+        // PT：这使得它在跳跃时向上移动的平台上失败
+        // 但是，如果我们不这样做，向上移动时的跳跃将不再起作用！
+        // 当一个胶囊 CCT 跳到另一个胶囊 CCT 时，不这样做也会产生抖动
 		if(!standingOnMovingUp)	// PT: if we're standing on something moving up it's safer to do the up motion anyway, even though this won't work well before we add the flag in TA13542
+            // PT：如果我们站在向上移动的物体上，无论如何做向上运动都是安全的，即使在我们在 TA13542 中添加标志之前这不会很好地工作
 		{
 //			static int count=0;	printf("Cancelling step offset... %d\n", count++);
 			stepOffset = 0.0f;
@@ -1700,7 +1726,12 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 	// the geometry, the problems disappear.
 	// - if the motion is lateral (character moving forward under normal gravity) the decomposition provides the autostep feature
 	// - if the motion is purely up, the down part can be skipped
-
+    /** 将运动分解为 3 个独立的运动：向上、侧向、向下
+     *  - 如果运动纯粹是向下（仅重力），则需要向上部分来解决准确性问题。 
+     *    例如，如果角色已经稍微接触了几何体，则向下扫描测试可能会出现问题。 如果我们首先将其移动到几何体上方，问题就会消失。
+     *  - 如果运动是横向的（角色在正常重力下向前移动），则分解提供自动步进功能。
+     *  - 如果运动纯粹是向上的，可以跳过向下的部分。
+     */ 
 	PxVec3 UpVector(0.0f, 0.0f, 0.0f);
 	PxVec3 DownVector(0.0f, 0.0f, 0.0f);
 
@@ -1722,9 +1753,14 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 	// If the side motion is zero, i.e. if the character is not really moving, disable auto-step.
 	// This is important to prevent the CCT from automatically climbing on small objects that move
 	// against it. We should climb over those only if there's a valid side motion from the player.
+    // 如果侧面运动为零，即如果角色没有真正移动，请禁用自动步进。
+    // 这对于防止 CCT 自动爬上与其移动的小物体很重要。 只有当玩家有有效的侧面动作时，我们才应该越过那些。
 	const bool sideVectorIsZero = !standingOnMovingUp && Ps::isAlmostZero(SideVector);	// We can't use PxVec3::isZero() safely with arbitrary up vectors
+    // 我们不能安全地将 PxVec3::isZero() 与任意向上向量一起使用
 	// #### however if we do this the up pass is disabled, with bad consequences when the CCT is on a dynamic object!!
 	// ### this line makes it possible to push other CCTs by jumping on them
+    // ### 但是如果我们这样做，向上传递将被禁用，当 CCT 在动态对象上时会产生不良后果！！
+    // ### 这一行可以通过跳转到其他 CCT 来推动它们
 //	const bool sideVectorIsZero = false;
 //	printf("sideVectorIsZero: %d\n", sideVectorIsZero);
 
@@ -1735,15 +1771,18 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 //	printf("stepOffset: %f\n", stepOffset);
 
 	// ==========[ Initial volume query ]===========================
+
 	// PT: the main difference between this initial query and subsequent ones is that we use the
 	// full direction vector here, not the components along each axis. So there is a good chance
 	// that this initial query will contain all the motion we need, and thus subsequent queries
 	// will be skipped.
+    // PT：这个初始查询和后续查询之间的主要区别在于我们在这里使用完整的方向向量，而不是沿每个轴的分量。 
+    // 所以这个初始查询很有可能包含我们需要的所有动作，因此后续查询将被跳过。
 	{
 		PxExtendedBounds3 temporalBox;
 		volume.computeTemporalBox(*this, temporalBox, volume.mCenter, direction);
 
-		// Gather touched geoms
+		// Gather touched geoms 合并碰到的图形
 		updateTouchedGeoms(userData, userObstacles, temporalBox, filters, SideVector);
 	}
 
@@ -1766,27 +1805,34 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 		// Prevent user callback for up motion. This up displacement is artificial, and only needed for auto-stepping.
 		// If we call the user for this, we might eventually apply upward forces to objects resting on top of us, even
 		// if we visually don't move. This produces weird-looking motions.
+        // 防止用户回调向上运动。 这种向上位移是人为的，仅用于自动步进。
+        // 如果我们为此调用用户，我们最终可能会对位于我们上方的物体施加向上的力，即使
+        // 如果我们在视觉上不动。 这会产生看起来很奇怪的动作。
 //		mValidateCallback = false;
 		// PT: actually I think the previous comment is wrong. It's not only needed for auto-stepping: when the character
 		// jumps there's a legit up motion and the lack of callback in that case could need some object can't be pushed
 		// by the character's 'head' (for example). So I now think it's better to use the callback all the time, and
 		// let users figure out what to do using the available state (like "isMovingUp", etc).
+        // PT: 其实我觉得之前的评论是错误的。 它不仅需要自动步进：当角色跳跃时，有一个合法的向上运动，
+        // 并且在这种情况下缺少回调可能需要一些不能被角色的“头部”推动的对象（例如）。 
+        // 所以我现在认为最好一直使用回调，并让用户使用可用状态（如“isMovingUp”等）弄清楚该怎么做。
 //		mValidateCallback = true;
 
 		// In the walk-experiment we explicitly want to ban any up motions, to avoid characters climbing slopes they shouldn't climb.
 		// So let's bypass the whole up pass.
+        // 在步行实验中，我们明确希望禁止任何向上运动，以避免角色爬上他们不应该爬的斜坡。所以让我们绕过整个向上传递。
 		if(!(mFlags & STF_WALK_EXPERIMENT))
 		{
-			// ### maxIter here seems to "solve" the V bug
+			// ### maxIter here seems to "solve" the V bug  // maxIter 这里似乎“解决”了 V 错误
 			if(doSweepTest(userData, userHitData, userObstacles, volume, UpVector, SideVector, maxIterUp, &NbCollisions, min_dist, filters, SWEEP_PASS_UP, touchedActor, touchedShape, contextID))
 			{
 				if(NbCollisions)
 				{
 					CollisionFlags |= PxControllerCollisionFlag::eCOLLISION_UP;
 
-					// Clamp step offset to make sure we don't undo more than what we did
+					// Clamp step offset to make sure we don't undo more than what we did   
+                    // 抓住step offset 以确保我们不会撤消比我们所做的更多
                     float Delta = float(volume.mCenter.dot(upDirection) - originalHeight);
-
                     if(Delta<stepOffset)
 					{
 						stepOffset=Delta;
@@ -1843,8 +1889,9 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 		NbCollisions=0;
 
 //		if(!SideVector.isZero())	// We disabled that before so we don't have to undo it in that case
+                                    // 我们之前禁用了它，所以在这种情况下我们不必撤消它
 		if(!sideVectorIsZero)		// We disabled that before so we don't have to undo it in that case
-//			DownVector[upDirection] -= stepOffset;	// Undo our artificial up motion
+//			DownVector[upDirection] -= stepOffset;	// Undo our artificial up motion    撤消我们的人工向上运动
 			DownVector -= upDirection*stepOffset;	// Undo our artificial up motion
 
 		mFlags &= ~STF_VALIDATE_TRIANGLE_DOWN;
@@ -1852,8 +1899,9 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 		touchedActor = NULL;
 		mTouchedObstacleHandle	= INVALID_OBSTACLE_HANDLE;
 
-		// min_dist actually makes a big difference :(
+		// min_dist actually makes a big difference :(      // min_dist 实际上有很大的不同
 		// AAARRRGGH: if we get culled because of min_dist here, mValidateTriangle never becomes valid!
+        // AAARRRGGH：如果我们因为这里的 min_dist 被剔除，mValidateTriangle 永远不会变得有效！
 		if(doSweepTest(userData, userHitData, userObstacles, volume, DownVector, SideVector, maxIterDown, &NbCollisions, min_dist, filters, SWEEP_PASS_DOWN, touchedActor, touchedShape, contextID))
 		{
 			if(NbCollisions)
@@ -1862,13 +1910,19 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 					CollisionFlags |= PxControllerCollisionFlag::eCOLLISION_DOWN;
 
 				if(mUserParams.mHandleSlope && !(mFlags & (STF_TOUCH_OTHER_CCT|STF_TOUCH_OBSTACLE)))	// PT: I think the following fix shouldn't be performed when mHandleSlope is false.
+                    // PT：我认为当 mHandleSlope 为 false 时不应执行以下修复。
 				{
 					// PT: the following code is responsible for a weird capsule behaviour,
 					// when colliding against a highly tesselated terrain:
 					// - with a large direction vector, the capsule gets stuck against some part of the terrain
 					// - with a slower direction vector (but in the same direction!) the capsule manages to move
 					// I will keep that code nonetheless, since it seems to be useful for them.
+                    // PT：以下代码负责在与高度细分的地形碰撞时出现奇怪的胶囊行为：
+                    // - 使用大方向向量时，胶囊会卡在地形的某些部分
+                    // - 使用较慢的方向向量（但方向相同！）胶囊设法移动
+                    // 尽管如此，我还是会保留该代码，因为它似乎对他们有用。
 //printf("%d\n", mFlags & STF_VALIDATE_TRIANGLE_SIDE);
+
 					// constrainedClimbingMode
 					if((mFlags & STF_VALIDATE_TRIANGLE_SIDE) && testSlope(mContactNormalSidePass, upDirection, mUserParams.mSlopeLimit))
 					{
@@ -1892,6 +1946,10 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 		// ### kind of works but still not perfect
 		// ### could it be because we zero the Y impulse later?
 		// ### also check clamped response vectors
+        // 测试：如果我们在不可行走的多边形上，再做一次向下传球
+        // ### 类型的作品，但仍然不完美
+        // ### 可能是因为我们稍后将 Y 脉冲归零吗？
+        // ### 还检查钳位响应向量
 //		if(mUserParams.mHandleSlope && mValidateTriangle && direction[upDirection]<0.0f)
 //		if(mUserParams.mHandleSlope && !mTouchOtherCCT  && !mTouchObstacle && mValidateTriangle && dir_dot_up<0.0f)
 		if(mUserParams.mHandleSlope && !(mFlags & (STF_TOUCH_OTHER_CCT|STF_TOUCH_OBSTACLE)) && (mFlags & STF_VALIDATE_TRIANGLE_DOWN) && dir_dot_up<=0.0f)
@@ -1920,6 +1978,7 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 			{
 				mFlags |= STF_HIT_NON_WALKABLE;
 				// Early exit if we're going to run this again anyway...
+                // 如果我们无论如何要再次运行它，请提前退出......
 				if(!(mFlags & STF_WALK_EXPERIMENT))
 					return CollisionFlags;
 		/*		CatchScene()->GetRenderer()->AddLine(mTouchedTriangle.mVerts[0], mTouched.mVerts[1], ARGB_YELLOW);
@@ -1943,12 +2002,15 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 				RecoverPoint = -upDirection*Recover;
 
 				// PT: we pass "SWEEP_PASS_UP" for compatibility with previous code, but it's technically wrong (this is a 'down' pass)
+                // PT：我们传递“SWEEP_PASS_UP”是为了与之前的代码兼容，但技术上是错误的（这是一个“向下”传递）
 				if(doSweepTest(userData, userHitData, userObstacles, volume, RecoverPoint, SideVector, maxIter, &NbCollisions, MD, filters, SWEEP_PASS_UP, touchedActor, touchedShape, contextID))
 				{
 		//			if(NbCollisions)	CollisionFlags |= COLLISION_Y_DOWN;
 					// PT: why did we do this ? Removed for now. It creates a bug (non registered event) when we land on a steep poly.
 					// However this might have been needed when we were sliding on those polygons, and we didn't want the land anim to
 					// start while we were sliding.
+                    // PT：我们为什么要这样做？ 暂时删除了。 当我们降落在陡峭的多边形上时，它会产生一个错误（未注册的事件）。
+                    // 但是，当我们在这些多边形上滑动时可能需要这样做，并且我们不希望在滑动时陆地动画开始。
 		//			if(NbCollisions)	CollisionFlags &= ~PxControllerCollisionFlag::eCOLLISION_DOWN;
 				}
 				mFlags &= ~STF_NORMALIZE_RESPONSE;
@@ -1963,6 +2025,7 @@ PxControllerCollisionFlags SweepTest::moveCharacter(
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // This is an interface between NX users and the internal character controller module.
+// 这是 NX 用户和内部角色控制器模块之间的接口。
 
 #include "characterkinematic/PxControllerBehavior.h"
 #include "PxActor.h"
@@ -2217,13 +2280,13 @@ bool Controller::rideOnTouchedObject(SweptVolume& volume, const PxVec3& upDirect
 
 PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& originalDisp, PxF32 minDist, PxF32 elapsedTime, const PxControllerFilters& filters, const PxObstacleContext* obstacleContext, bool constrainedClimbingMode)
 {
-	const bool lockWrite = mManager->mLockingEnabled;
+	const bool lockWrite = mManager->mLockingEnabled;   // 加写锁
 	if(lockWrite)
 		mWriteLock.lock();	
 
-	mGlobalTime += PxF64(elapsedTime);
+	mGlobalTime += PxF64(elapsedTime);                  // 总时间
 
-	// Init CCT with per-controller settings
+	// Init CCT with per-controller settings            // 初始化CCT前置参数
 	RenderBuffer* renderBuffer										= mManager->mRenderBuffer;
 	const PxU32 debugRenderFlags									= mManager->mDebugRenderingFlags;
 	mCctModule.mRenderBuffer										= renderBuffer;
@@ -2244,10 +2307,11 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 	PxVec3 disp = originalDisp + mOverlapRecover;
 	mOverlapRecover = PxVec3(0.0f);
 
-	bool standingOnMoving = false;	// PT: whether the CCT is currently standing on a moving object
+    // CCT当前是否站在移动物体上
+	bool standingOnMoving = false;	// PT: whether the CCT is currently standing on a moving object CCT 
 	//printf("Touched shape: %d\n", int(mCctModule.mTouchedShape));
-//standingOnMoving=true;
-//	printf("Touched obstacle: %d\n", int(mCctModule.mTouchedObstacle));
+    //standingOnMoving=true;
+    //printf("Touched obstacle: %d\n", int(mCctModule.mTouchedObstacle));
 
 	if(mCctModule.mTouchedActor && mCctModule.mTouchedShape)
 	{
@@ -2271,7 +2335,7 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 		}
 		else
 		{
-			// check if we are still in the same scene
+			// check if we are still in the same scene  // 场景不一样
 			if(mCctModule.mTouchedActor->getScene() != mScene)
 			{
 				mCctModule.mTouchedShape = NULL;
@@ -2279,7 +2343,7 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 			}
 			else
 			{
-				// check if the shape still does have the sq flag
+				// check if the shape still does have the sq flag   // shape不是query_shape类型
 				if(!(mCctModule.mTouchedShape->getFlags() & PxShapeFlag::eSCENE_QUERY_SHAPE))
 				{
 					mCctModule.mTouchedShape = NULL;
@@ -2287,7 +2351,7 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 				}
 				else
 				{
-					// invoke the CCT filtering for the shape
+					// invoke the CCT filtering for the shape       // 调用形状的 CCT 过滤
 					if(!filterTouchedShape(filters))
 					{
 						mCctModule.mTouchedShape = NULL;
@@ -2298,11 +2362,15 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 		}
 	}
 
+    // 是否站在障碍物上
 	if(!mCctModule.mTouchedShape && (mCctModule.mTouchedObstacleHandle == INVALID_OBSTACLE_HANDLE))
-		findTouchedObject(filters, obstacleContext, upDirection);
-
+    {
+        findTouchedObject(filters, obstacleContext, upDirection);
+    }
+		
 	if(mCctModule.mTouchedShape || (mCctModule.mTouchedObstacleHandle != INVALID_OBSTACLE_HANDLE))
 	{
+        // 不在障碍物上，则检测一下是否在其它对象上
 		standingOnMoving = rideOnTouchedObject(volume, upDirection, disp, obstacleContext);
 	}
 	else
@@ -2323,9 +2391,10 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 	PX_ASSERT(!capsules.size());
 
 	{
+        // filter筛选controllers
 		PX_PROFILE_ZONE("CharacterController.filterCandidateControllers", getContextId());
 
-		// Experiment - to do better
+		// Experiment 实验 - to do better
 		const PxU32 nbControllers = mManager->getNbControllers();
 		Controller** controllers = mManager->getControllers();
 
@@ -2343,7 +2412,7 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 			{
 				if(currentController->mType==PxControllerShapeType::eBOX)
 				{
-					// PT: TODO: optimize this
+					// PT: TODO: optimize 优化 this  
 					BoxController* BC = static_cast<BoxController*>(currentController);
 					PxExtendedBox obb;
 					BC->getOBB(obb);
@@ -2469,6 +2538,7 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 	mCctModule.mFlags &= ~STF_WALK_EXPERIMENT;
 
 	// store new touched actor/shape. Then set new actor/shape to avoid register/unregister for same objects
+    // 存储新接触的actor/shape。 然后设置新的actor/shape以避免 register/unregister 相同的对象
 	const PxRigidActor* touchedActor = NULL;
 	const PxShape* touchedShape = NULL;
 	PxExtendedVec3 Backup = volume.mCenter;
@@ -2477,6 +2547,7 @@ PxControllerCollisionFlags Controller::move(SweptVolume& volume, const PxVec3& o
 	if(mCctModule.mFlags & STF_HIT_NON_WALKABLE)
 	{
 		// A bit slow, but everything else I tried was less convincing...
+        // 有点慢，但我尝试的其他办法更慢
 		mCctModule.mFlags |= STF_WALK_EXPERIMENT;
 		volume.mCenter = Backup;
 

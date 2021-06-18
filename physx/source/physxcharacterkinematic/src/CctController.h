@@ -85,8 +85,8 @@ namespace Cct
 					PxControllerBehaviorCallback*		mBehaviorCallback;
 					void*								mUserData;
 		// Internal data
-					SweepTest							mCctModule;			// Internal CCT object. Optim test for Ubi.
-					PxRigidDynamic*						mKineActor;			// Associated kinematic actor
+					SweepTest							mCctModule;			// Internal CCT object. Optim test for Ubi. 最佳的sweep test
+					PxRigidDynamic*						mKineActor;			// Associated kinematic actor   运动学actor
 					PxExtendedVec3						mPosition;			// Current position
 					PxVec3								mDeltaXP;
 					PxVec3								mOverlapRecover;
@@ -94,13 +94,14 @@ namespace Cct
 					PxU32								mPreviousSceneTimestamp;					
 					PxF64								mGlobalTime;
 					PxF64								mPreviousGlobalTime;
-					PxF32								mProxyDensity;		// Density for proxy actor
-					PxF32								mProxyScaleCoeff;	// Scale coeff for proxy actor
+					PxF32								mProxyDensity;		// Density for proxy actor  密度
+					PxF32								mProxyScaleCoeff;	// Scale coeff for proxy actor  比例系数
 					PxControllerCollisionFlags			mCollisionFlags;	// Last known collision flags (PxControllerCollisionFlag)
 					bool								mCachedStandingOnMoving;
 					bool								mRegisterDeletionListener;
-		mutable		Ps::Mutex							mWriteLock;			// Lock used for guarding touched pointers and cache data from overwriting 
-																			// during onRelease call.
+                    // 用于在 onRelease 调用期间保护触摸的指针和缓存数据不被覆盖的锁。
+		mutable		Ps::Mutex							mWriteLock;			// Lock used for guarding touched pointers and cache data from overwriting during onRelease call.
+
 	protected:
 		// Internal methods
 					void								setUpDirectionInternal(const PxVec3& up);
@@ -108,7 +109,8 @@ namespace Cct
 					bool								createProxyActor(PxPhysics& sdk, const PxGeometry& geometry, const PxMaterial& material);
 					bool								setPos(const PxExtendedVec3& pos);
 					void								findTouchedObject(const PxControllerFilters& filters, const PxObstacleContext* obstacleContext, const PxVec3& upDirection);
-					bool								rideOnTouchedObject(SweptVolume& volume, const PxVec3& upDirection, PxVec3& disp, const PxObstacleContext* obstacleContext);
+					// 是否站在物体上
+                    bool								rideOnTouchedObject(SweptVolume& volume, const PxVec3& upDirection, PxVec3& disp, const PxObstacleContext* obstacleContext);
 					PxControllerCollisionFlags			move(SweptVolume& volume, const PxVec3& disp, PxF32 minDist, PxF32 elapsedTime, const PxControllerFilters& filters, const PxObstacleContext* obstacles, bool constrainedClimbingMode);
 					bool								filterTouchedShape(const PxControllerFilters& filters);
 

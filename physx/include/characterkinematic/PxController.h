@@ -52,14 +52,12 @@ struct PxControllerShapeType
 	{
 		/**
 		\brief A box controller.
-
 		@see PxBoxController PxBoxControllerDesc
 		*/
 		eBOX,
 
 		/**
 		\brief A capsule controller
-
 		@see PxCapsuleController PxCapsuleControllerDesc
 		*/
 		eCAPSULE,
@@ -80,21 +78,24 @@ class PxObstacleContext;
 class PxObstacle;
 
 /**
-\brief specifies how a CCT interacts with non-walkable parts.
-
+\brief specifies how a CCT interacts with non-walkable parts. 指定 CCT 如何与不可行走部分交互
 This is only used when slopeLimit is non zero. It is currently enabled for static actors only, and not supported for spheres or capsules.
+这仅在slopeLimit 非零时使用。 目前仅对静态actor 启用，不支持球体或胶囊。
 */
 struct PxControllerNonWalkableMode
 {
 	enum Enum
 	{
+        // 阻止角色爬上不可行走的斜坡，但不会移动它
 		ePREVENT_CLIMBING,						//!< Stops character from climbing up non-walkable slopes, but doesn't move it otherwise
+
+        // 阻止角色爬上不可行走的斜坡，并迫使其滑下这些斜坡
 		ePREVENT_CLIMBING_AND_FORCE_SLIDING		//!< Stops character from climbing up non-walkable slopes, and forces it to slide down those slopes
 	};
 };
 
 /**
-\brief specifies which sides a character is colliding with.
+\brief specifies which sides a character is colliding with. 指定角色与哪一边碰撞
 */
 struct PxControllerCollisionFlag
 {
@@ -108,7 +109,6 @@ struct PxControllerCollisionFlag
 
 /**
 \brief Bitfield that contains a set of raised flags defined in PxControllerCollisionFlag.
-
 @see PxControllerCollisionFlag
 */
 typedef PxFlags<PxControllerCollisionFlag::Enum, PxU8> PxControllerCollisionFlags;
@@ -154,7 +154,6 @@ struct PxControllerHit
 
 /**
 \brief Describes a hit between a CCT and a shape. Passed to onShapeHit()
-
 @see PxUserControllerHitReport.onShapeHit()
 */
 struct PxControllerShapeHit : public PxControllerHit
@@ -166,7 +165,6 @@ struct PxControllerShapeHit : public PxControllerHit
 
 /**
 \brief Describes a hit between a CCT and another CCT. Passed to onControllerHit().
-
 @see PxUserControllerHitReport.onControllerHit()
 */
 struct PxControllersHit : public PxControllerHit
@@ -176,7 +174,6 @@ struct PxControllersHit : public PxControllerHit
 
 /**
 \brief Describes a hit between a CCT and a user-defined obstacle. Passed to onObstacleHit().
-
 @see PxUserControllerHitReport.onObstacleHit() PxObstacleContext
 */
 struct PxControllerObstacleHit : public PxControllerHit
@@ -186,9 +183,7 @@ struct PxControllerObstacleHit : public PxControllerHit
 
 /**
 \brief User callback class for character controller events.
-
 \note Character controller hit reports are only generated when move is called.
-
 @see PxControllerDesc.callback
 */
 class PxUserControllerHitReport
@@ -197,29 +192,22 @@ public:
 
 	/**
 	\brief Called when current controller hits a shape.
-
 	This is called when the CCT moves and hits a shape. This will not be called when a moving shape hits a non-moving CCT.
-
 	\param[in] hit Provides information about the hit.
-
 	@see PxControllerShapeHit
 	*/
 	virtual void onShapeHit(const PxControllerShapeHit& hit) = 0;
 
 	/**
 	\brief Called when current controller hits another controller.
-
 	\param[in] hit Provides information about the hit.
-
 	@see PxControllersHit
 	*/
 	virtual void onControllerHit(const PxControllersHit& hit) = 0;
 
 	/**
 	\brief Called when current controller hits a user-defined obstacle.
-
 	\param[in] hit Provides information about the hit.
-
 	@see PxControllerObstacleHit PxObstacleContext
 	*/
 	virtual void onObstacleHit(const PxControllerObstacleHit& hit) = 0;
@@ -237,6 +225,9 @@ This controls collisions between CCTs (one CCT vs anoter CCT).
 To make each CCT collide against all other CCTs, just return true - or simply avoid defining a callback.
 To make each CCT freely go through all other CCTs, just return false.
 Otherwise create a custom filtering logic in this callback.
+要使每个 CCT 与所有其他 CCT 发生冲突，只需返回 true - 或者干脆避免定义回调。
+要让每个 CCT 自由地通过所有其他 CCT，只需返回 false。
+否则在此回调中创建自定义过滤逻辑。
 
 @see PxControllerFilters
 */
@@ -247,7 +238,6 @@ public:
 
 	/**
 	\brief Filtering method for CCT-vs-CCT.
-
 	\param[in] a	First CCT
 	\param[in] b	Second CCT
 	\return true to keep the pair, false to filter it out
@@ -259,16 +249,23 @@ public:
 \brief Filtering data for "move" call.
 
 This class contains all filtering-related parameters for the PxController::move() call.
+这个类包含 PxController::move() 所有过滤相关参数
 
 Collisions between a CCT and the world are filtered using the mFilterData, mFilterCallback and mFilterFlags
 members. These parameters are internally passed to PxScene::overlap() to find objects touched by the CCT.
 Please refer to the PxScene::overlap() documentation for details.
+使用 mFilterData、mFilterCallback 和 mFilterFlags 过滤 CCT 和世界之间的碰撞。
+这些参数在内部传递给 PxScene::overlap() 以查找 CCT 接触的对象。
+详细信息请参阅 PxScene::overlap() 文档。
 
 Collisions between a CCT and another CCT are filtered using the mCCTFilterCallback member. If this filter
 callback is not defined, none of the CCT-vs-CCT collisions are filtered, and each CCT will collide against
 all other CCTs.
+使用 mCCTFilterCallback 过滤 CCT 和另一个 CCT 之间的碰撞。 
+如果未定义mCCTFilterCallback，则不会过滤任何 CCT-vs-CCT 碰撞，并且每个 CCT 将与所有其他 CCT 发生碰撞。
 
 \note PxQueryFlag::eANY_HIT and PxQueryFlag::eNO_BLOCK are ignored in mFilterFlags.
+在 mFilterFlags 中忽略了 PxQueryFlag::eANY_HIT 和 PxQueryFlag::eNO_BLOCK。
 
 @see PxController.move() PxControllerFilterCallback
 */
@@ -285,16 +282,19 @@ class PxControllerFilters
 
 	// CCT-vs-shapes:
 	const PxFilterData*			mFilterData;			//!< Data for internal PxQueryFilterData structure. Passed to PxScene::overlap() call.
+                                                        // 内部 PxQueryFilterData 结构的数据。 传递给 PxScene::overlap() 调用。
 														//!< This can be NULL, in which case a default PxFilterData is used.
+                                                        // 这可以是 NULL，在这种情况下使用默认的 PxFilterData。
 	PxQueryFilterCallback*		mFilterCallback;		//!< Custom filter logic (can be NULL). Passed to PxScene::overlap() call.
+                                                        // 自定义过滤器逻辑（可以为 NULL）。 传递给 PxScene::overlap() 调用。
 	PxQueryFlags				mFilterFlags;			//!< Flags for internal PxQueryFilterData structure. Passed to PxScene::overlap() call.
-	// CCT-vs-CCT:
+                                                        // 内部 PxQueryFilterData 结构的标志。 传递给 PxScene::overlap() 调用。
+    // CCT-vs-CCT:
 	PxControllerFilterCallback*	mCCTFilterCallback;		//!< CCT-vs-CCT filter callback. If NULL, all CCT-vs-CCT collisions are kept.
 };
 
 /**
 \brief Descriptor class for a character controller.
-
 @see PxBoxController PxCapsuleController
 */
 class PxControllerDesc
@@ -303,36 +303,31 @@ public:
 
 	/**
 	\brief returns true if the current settings are valid
-
 	\return True if the descriptor is valid.
 	*/
 	PX_INLINE virtual	bool			isValid()		const;
 
 	/**
 	\brief Returns the character controller type
-
 	\return The controllers type.
 
 	@see PxControllerType PxCapsuleControllerDesc PxBoxControllerDesc
 	*/
 	PX_INLINE	PxControllerShapeType::Enum		getType()		const	{ return mType;		}
-
 	/**
 	\brief The position of the character
 
 	\note The character's initial position must be such that it does not overlap the static geometry.
-
+          角色的初始位置必须不与静态几何体重叠。
 	<b>Default:</b> Zero
 	*/
 	PxExtendedVec3						position;
 
 	/**
 	\brief Specifies the 'up' direction
-
 	In order to provide stepping functionality the SDK must be informed about the up direction.
-
+    为了提供步进功能，SDK 必须被告知向上方向。
 	<b>Default:</b> (0, 1, 0)
-
 	*/
 	PxVec3								upDirection;
 
@@ -340,52 +335,58 @@ public:
 	\brief The maximum slope which the character can walk up.
 
 	In general it is desirable to limit where the character can walk, in particular it is unrealistic
-	for the character to be able to climb arbitary slopes.
+	for the character to be able to climb arbitary slopes.  // 用来限制坡度行走
 
 	The limit is expressed as the cosine of desired limit angle. A value of 0 disables this feature.
+    这个值表示坡度角的余弦值，为0表示禁用此功能，即没有坡度限制。
 
 	\warning It is currently enabled for static actors only (not for dynamic/kinematic actors), and not supported for spheres or capsules.
-
+             目前仅对静态角色启用（不适用于动态/运动角色），不支持球体或胶囊。
 	<b>Default:</b> 0.707
-
 	@see upDirection invisibleWallHeight maxJumpHeight
 	*/
-	PxF32								slopeLimit;
+	PxF32								slopeLimit;         // 最大坡度
 
 	/**
 	\brief Height of invisible walls created around non-walkable triangles
+           在不可行走的三角形周围创建的隐形墙的高度
 
 	The library can automatically create invisible walls around non-walkable triangles defined
 	by the 'slopeLimit' parameter. This defines the height of those walls. If it is 0.0, then
 	no extra triangles are created.
+    该库可以在由 'slopeLimit' 参数定义的不可行走三角形周围自动创建隐形墙。 
+    这定义了这些墙的高度。 如果为 0.0，则不会创建额外的三角形
 
 	<b>Default:</b> 0.0
-
 	@see upDirection slopeLimit maxJumpHeight
 	*/
 	PxF32								invisibleWallHeight;
 
 	/**
-	\brief Maximum height a jumping character can reach
+	\brief Maximum height a jumping character can reach 角色最大跳跃高度
 
 	This is only used if invisible walls are created ('invisibleWallHeight' is non zero).
+    这仅在创建了不可见墙时使用（'invisibleWallHeight' 非零）。
 
 	When a character jumps, the non-walkable triangles he might fly over are not found
 	by the collision queries (since the character's bounding volume does not touch them).
 	Thus those non-walkable triangles do not create invisible walls, and it is possible
 	for a jumping character to land on a non-walkable triangle, while he wouldn't have
 	reached that place by just walking.
+    当角色跳跃时，碰撞查询不会找到他可能飞过的不可行走的三角形（因为角色的边界体积不会接触它们）。
+    因此，那些不可行走的三角形不会创建隐形墙，跳跃的角色有可能降落在不可行走的三角形上，而他仅靠行走是无法到达那个地方的。
 
 	The 'maxJumpHeight' variable is used to extend the size of the collision volume
 	downward. This way, all the non-walkable triangles are properly found by the collision
 	queries and it becomes impossible to 'jump over' invisible walls.
+    'maxJumpHeight' 变量用于向下扩展碰撞体积的大小。 
+    通过这种方式，碰撞查询可以正确找到所有不可行走的三角形，并且不可能“跳过”隐形墙。
 
 	If the character in your game can not jump, it is safe to use 0.0 here. Otherwise it
 	is best to keep this value as small as possible, since a larger collision volume
 	means more triangles to process.
 
 	<b>Default:</b> 0.0
-
 	@see upDirection slopeLimit invisibleWallHeight
 	*/
 	PxF32								maxJumpHeight;
@@ -395,9 +396,11 @@ public:
 
 	Specifies a skin around the object within which contacts will be generated.
 	Use it to avoid numerical precision issues.
+    指定将在其中生成接触的对象周围的皮肤。 使用它可以避免数值精度问题。
 
 	This is dependant on the scale of the users world, but should be a small, positive 
 	non zero value.
+    这取决于用户世界的规模，但应该是一个小的、正的非零值。
 
 	<b>Default:</b> 0.1
 	*/
@@ -405,115 +408,108 @@ public:
 
 	/**
 	\brief Defines the maximum height of an obstacle which the character can climb.
+           定义角色可以攀爬的障碍物的最大高度。
 
 	A small value will mean that the character gets stuck and cannot walk up stairs etc, 
 	a value which is too large will mean that the character can climb over unrealistically 
 	high obstacles.
+    设较小的值角色会被卡住并且无法上楼梯等，设太大的值角色可以越过不切实际的高障碍物。
 
 	<b>Default:</b> 0.5
-
 	@see upDirection 
 	*/
 	PxF32								stepOffset;
 
 	/**
-	\brief Density of underlying kinematic actor
-
+	\brief Density of underlying kinematic actor    底层运动actor的密度
 	The CCT creates a PhysX's kinematic actor under the hood. This controls its density.
-
+    CCT 在引擎下创建了 PhysX 的运动actor。 这控制了它的密度。
 	<b>Default:</b> 10.0
 	*/
 	PxF32								density;
 
 	/**
-	\brief Scale coefficient for underlying kinematic actor
-
+	\brief Scale coefficient for underlying kinematic actor     基础运动actor的比例系数
 	The CCT creates a PhysX's kinematic actor under the hood. This controls its scale factor.
 	This should be a number a bit smaller than 1.0.
-
+    CCT 在引擎下创建了 PhysX 的运动学演员。 这控制了它的比例因子。
+    这应该是一个比 1.0 小一点的数字。
 	<b>Default:</b> 0.8
 	*/
 	PxF32								scaleCoeff;
 
 	/**
-	\brief Cached volume growth
-
+	\brief Cached volume growth     缓存卷增长
 	Amount of space around the controller we cache to improve performance. This is a scale factor
 	that should be higher than 1.0f but not too big, ideally lower than 2.0f.
-
+    我们缓存的控制器周围的空间量以提高性能。 这是一个比例因子，应该高于 1.0f 但不要太大，最好低于 2.0f。
 	<b>Default:</b> 1.5
 	*/
 	PxF32								volumeGrowth;
 
 	/**
 	\brief Specifies a user report callback.
-
 	This report callback is called when the character collides with shapes and other characters.
-
 	Setting this to NULL disables the callback.
-
+    当角色与形状和其他角色碰撞时调用此报告回调。    将此设置为 NULL 将禁用回调。
 	<b>Default:</b> NULL
-
 	@see PxUserControllerHitReport
 	*/
 	PxUserControllerHitReport*			reportCallback;
 
 	/**
 	\brief Specifies a user behavior callback.
-
 	This behavior callback is called to customize the controller's behavior w.r.t. touched shapes.
-
 	Setting this to NULL disables the callback.
-
+    调用此行为回调来自定义控制器的行为 w.r.t. 触摸的形状。    将此设置为 NULL 将禁用回调。
 	<b>Default:</b> NULL
-
 	@see PxControllerBehaviorCallback
 	*/
 	PxControllerBehaviorCallback*		behaviorCallback;
 
 	/**
 	\brief The non-walkable mode controls if a character controller slides or not on a non-walkable part.
-
+           不可行走模式控制角色控制器是否在不可行走部分滑动。
 	This is only used when slopeLimit is non zero.
-
+    这仅在slopeLimit 非零时使用。
 	<b>Default:</b> PxControllerNonWalkableMode::ePREVENT_CLIMBING
-
 	@see PxControllerNonWalkableMode
 	*/
 	PxControllerNonWalkableMode::Enum	nonWalkableMode;
 
 	/**
-	\brief The material for the actor associated with the controller.
-	
+	\brief The material for the actor associated with the controller.   与controller关联的actor 的材质
 	The controller internally creates a rigid body actor. This parameter specifies the material of the actor.
-
+    controller内部创建一个刚体actor。 此参数指定actor 的材质。
 	<b>Default:</b> NULL
-
 	@see PxMaterial
 	*/
 	PxMaterial*							material;
 
 	/**
 	\brief Use a deletion listener to get informed about released objects and clear internal caches if needed.
+           使用删除侦听器获取有关已释放对象的通知，并在需要时清除内部缓存。
 
 	If a character controller registers a deletion listener, it will get informed about released objects. That allows the
 	controller to invalidate cached data that connects to a released object. If a deletion listener is not
 	registered, PxController::invalidateCache has to be called manually after objects have been released.
+    如果角色控制器注册了一个删除侦听器，它将收到有关已释放对象的通知。 
+    这允许控制器使连接到已发布对象的缓存数据无效。 
+    如果未注册删除侦听器，则必须在释放对象后手动调用 PxController::invalidateCache。
 
 	@see PxController::invalidateCache
-
 	<b>Default:</b> true
 	*/
 	bool								registerDeletionListener;
 
 	/**
-	\brief User specified data associated with the controller.
-
+	\brief User specified data associated with the controller.  用户指定的与控制器相关的数据
 	<b>Default:</b> NULL
 	*/
 	void*								userData;
 
 protected:
+    // 控制器的类型。 这由派生类的构造函数设置，用户不必更改它。
 	const PxControllerShapeType::Enum	mType;		//!< The type of the controller. This gets set by the derived class' ctor, the user should not have to change it.
 
 	/**
@@ -622,14 +618,13 @@ PX_INLINE bool PxControllerDesc::isValid() const
 
 /**
 \brief Base class for character controllers.
-
 @see PxCapsuleController PxBoxController
 */
 class PxController
 {
 public:
 	//*********************************************************************
-	// DEPRECATED FUNCTIONS:
+	// DEPRECATED FUNCTIONS:    已弃用
 	//
 	//	PX_DEPRECATED virtual	void						setInteraction(PxCCTInteractionMode::Enum flag)	= 0;
 	//	PX_DEPRECATED virtual	PxCCTInteractionMode::Enum	getInteraction()					const		= 0;
@@ -644,7 +639,6 @@ public:
 
 	/**
 	\brief Return the type of controller
-
 	@see PxControllerType
 	*/
 	virtual		PxControllerShapeType::Enum	getType()		const			= 0;
@@ -655,194 +649,177 @@ public:
 	virtual		void					release() = 0;
 
 	/**
-	\brief Moves the character using a "collide-and-slide" algorithm.
-
-	\param[in] disp	Displacement vector
+	\brief Moves the character using a "collide-and-slide" algorithm.   使用“碰撞和滑动”算法移动角色
+	\param[in] disp	Displacement vector     // 移位vector
 	\param[in] minDist The minimum travelled distance to consider. If travelled distance is smaller, the character doesn't move.
-	This is used to stop the recursive motion algorithm when remaining distance to travel is small.
-	\param[in] elapsedTime Time elapsed since last call
-	\param[in] filters User-defined filters for this move
-	\param[in] obstacles Potential additional obstacles the CCT should collide with.
+	                   This is used to stop the recursive motion algorithm when remaining distance to travel is small.
+                       要考虑的最小行进距离。 如果行进距离较小，则角色不会移动。
+                       这用于在剩余行进距离很小时停止递归运动算法。
+	\param[in] elapsedTime Time elapsed since last call     // 上次调用到这次调用经过的时间
+	\param[in] filters User-defined filters for this move   // 用户定义的移动过滤器
+	\param[in] obstacles Potential additional obstacles the CCT should collide with. // CCT 可能会遇到的其他潜在障碍
 	\return Collision flags, collection of ::PxControllerCollisionFlags
 	*/
 	virtual		PxControllerCollisionFlags	move(const PxVec3& disp, PxF32 minDist, PxF32 elapsedTime, const PxControllerFilters& filters, const PxObstacleContext* obstacles=NULL) = 0;
 
 	/**
 	\brief Sets controller's position.
-
-	The position controlled by this function is the center of the collision shape.
-
+	       The position controlled by this function is the center of the collision shape.
+           该函数控制的位置是碰撞形状的中心。
 	\warning This is a 'teleport' function, it doesn't check for collisions.
+             这是一个“传送”功能，它不检查碰撞。
 	\warning The character's position must be such that it does not overlap the static geometry.
-
-	To move the character under normal conditions use the #move() function.
-
+	         To move the character under normal conditions use the #move() function.
+             角色的位置必须不与静态几何体重叠。
+             要在正常条件下移动角色，请使用 #move() 函数。
 	\param[in] position The new (center) positon for the controller.
 	\return Currently always returns true.
-
 	@see PxControllerDesc.position getPosition() getFootPosition() setFootPosition() move()
 	*/
 	virtual		bool					setPosition(const PxExtendedVec3& position) = 0;
 
 	/**
-	\brief Retrieve the raw position of the controller.
+	\brief Retrieve the raw position of the controller. 检索控制器的原始位置
 
 	The position retrieved by this function is the center of the collision shape. To retrieve the bottom position of the shape,
 	a.k.a. the foot position, use the getFootPosition() function.
+    此函数检索到的位置是碰撞形状的中心。 要检索形状的底部位置，也就是脚的位置，请使用 getFootPosition() 函数。
 
 	The position is updated by calls to move(). Calling this method without calling
 	move() will return the last position or the initial position of the controller.
+    位置通过调用 move() 来更新。 在不调用 move() 的情况下调用此方法将返回控制器的最后位置或初始位置。
 
 	\return The controller's center position
-
 	@see PxControllerDesc.position setPosition() getFootPosition() setFootPosition() move()
 	*/
 	virtual		const PxExtendedVec3&	getPosition()			const	= 0;
 
 	/**
-	\brief Set controller's foot position.
-
-	The position controlled by this function is the bottom of the collision shape, a.k.a. the foot position.
-
+	\brief Set controller's foot position.  // 设置脚底坐标
+	       The position controlled by this function is the bottom of the collision shape, a.k.a. the foot position.
+           这个函数控制的位置是碰撞形状的底部，也就是脚的位置。
 	\note The foot position takes the contact offset into account
-
+          脚位置考虑了接触偏移
 	\warning This is a 'teleport' function, it doesn't check for collisions.
-
-	To move the character under normal conditions use the #move() function.
-
+	         To move the character under normal conditions use the #move() function.
+             这是一个“传送”功能，它不检查碰撞。
+             要在正常条件下移动角色，请使用 #move() 函数。
 	\param[in] position The new (bottom) positon for the controller.
 	\return Currently always returns true.
-
 	@see PxControllerDesc.position setPosition() getPosition() getFootPosition() move()
 	*/
 	virtual		bool					setFootPosition(const PxExtendedVec3& position) = 0;
 
 	/**
 	\brief Retrieve the "foot" position of the controller, i.e. the position of the bottom of the CCT's shape.
-
+           检索控制器的“脚”位置，即 CCT 形状底部的位置。
 	\note The foot position takes the contact offset into account
-
+          脚位置考虑了接触偏移
 	\return The controller's foot position
-
 	@see PxControllerDesc.position setPosition() getPosition() setFootPosition() move()
 	*/
 	virtual		PxExtendedVec3			getFootPosition()		const	= 0;
 
 	/**
 	\brief Get the rigid body actor associated with this controller (see PhysX documentation). 
-	The behavior upon manually altering this actor is undefined, you should primarily 
-	use it for reading const properties.
-
+           获取与此控制器关联的刚体 actor（请参阅 PhysX 文档）。
+	       The behavior upon manually altering this actor is undefined, you should primarily 
+	       use it for reading const properties.
+           手动更改此 actor 的行为未定义，您应该主要将其用于读取 const 属性。
 	\return the actor associated with the controller.
 	*/
 	virtual		PxRigidDynamic*			getActor()				const	= 0;
 
 	/**
 	\brief The step height.
-
 	\param[in] offset The new step offset for the controller.
-
 	@see PxControllerDesc.stepOffset
 	*/
 	virtual	    void					setStepOffset(const PxF32 offset) =0;
 
 	/**
 	\brief Retrieve the step height.
-
 	\return The step offset for the controller.
-
 	@see setStepOffset()
 	*/
 	virtual	    PxF32					getStepOffset()						const		=0;
 
 	/**
 	\brief Sets the non-walkable mode for the CCT.
-
 	\param[in] flag The new value of the non-walkable mode.
-
 	\see PxControllerNonWalkableMode
 	*/
 	virtual		void						setNonWalkableMode(PxControllerNonWalkableMode::Enum flag)	= 0;
 
 	/**
 	\brief Retrieves the non-walkable mode for the CCT.
-
 	\return The current non-walkable mode.
-
 	\see PxControllerNonWalkableMode
 	*/
 	virtual		PxControllerNonWalkableMode::Enum	getNonWalkableMode()				const		= 0;
 
 	/**
 	\brief Retrieve the contact offset.
-
 	\return The contact offset for the controller.
-
 	@see PxControllerDesc.contactOffset
 	*/
 	virtual	    PxF32					getContactOffset()					const		=0;
 
 	/**
 	\brief Sets the contact offset.
-
 	\param[in] offset	The contact offset for the controller.
-
 	@see PxControllerDesc.contactOffset
 	*/
 	virtual	    void					setContactOffset(PxF32 offset)					=0;
 
 	/**
 	\brief Retrieve the 'up' direction.
-
 	\return The up direction for the controller.
-
 	@see PxControllerDesc.upDirection
 	*/
 	virtual		PxVec3					getUpDirection()					const		=0;
 
 	/**
 	\brief Sets the 'up' direction.
-
 	\param[in] up The up direction for the controller.
-
 	@see PxControllerDesc.upDirection
 	*/
 	virtual		void					setUpDirection(const PxVec3& up)				=0;
 
 	/**
 	\brief Retrieve the slope limit.
-
 	\return The slope limit for the controller.
-
 	@see PxControllerDesc.slopeLimit
 	*/
 	virtual	    PxF32					getSlopeLimit()						const		=0;
 
 	/**
 	\brief Sets the slope limit.
-
 	\note	This feature can not be enabled at runtime, i.e. if the slope limit is zero when creating the CCT
 	(which disables the feature) then changing the slope limit at runtime will not have any effect, and the call
 	will be ignored.
-
 	\param[in]	slopeLimit	The slope limit for the controller.
-
 	@see PxControllerDesc.slopeLimit
 	*/
 	virtual	    void					setSlopeLimit(PxF32 slopeLimit)					=0;
 
 	/**
-	\brief Flushes internal geometry cache.
+	\brief Flushes internal geometry cache.     // 刷新内部几何缓存。
 	
 	The character controller uses caching in order to speed up collision testing. The cache is
 	automatically flushed when a change to static objects is detected in the scene. For example when a
-	static shape is added, updated, or removed from the scene, the cache is automatically invalidated.
-	
+	static shape is added, updated, or removed from the scene, the cache is automatically invalidated
+    角色控制器使用缓存来加速碰撞测试。 当在场景中检测到静态对象发生变化时，缓存会自动刷新。 
+    例如，在场景中添加、更新或删除静态形状时，缓存会自动失效。
+
 	However there may be situations that cannot be automatically detected, and those require manual
 	invalidation of the cache. Currently the user must call this when the filtering behavior changes (the
 	PxControllerFilters parameter of the PxController::move call).  While the controller in principle 
 	could detect a change in these parameters, it cannot detect a change in the behavior of the filtering 
 	function.
+    但是，可能存在无法自动检测到的情况，并且需要手动使缓存失效。 
+    当前用户必须在过滤行为改变时调用它（PxController::move 调用的 PxControllerFilters 参数）。 
+    虽然控制器原则上可以检测到这些参数的变化，但它无法检测过滤功能行为的变化。
 
 	@see PxController.move
 	*/
@@ -850,55 +827,46 @@ public:
 
 	/**
 	\brief Retrieve the scene associated with the controller.
-
 	\return The physics scene
 	*/
 	virtual		PxScene*				getScene()						= 0;
 
 	/**
 	\brief Returns the user data associated with this controller.
-
 	\return The user pointer associated with the controller.
-
 	@see PxControllerDesc.userData
 	*/
 	virtual		void*					getUserData()		const		= 0;
 
 	/**
 	\brief Sets the user data associated with this controller.
-
 	\param[in] userData The user pointer associated with the controller.
-
 	@see PxControllerDesc.userData
 	*/
 	virtual		void					setUserData(void* userData)		= 0;
 
 	/**
 	\brief Returns information about the controller's internal state.
-
 	\param[out] state The controller's internal state
-
 	@see PxControllerState
 	*/
 	virtual		void					getState(PxControllerState& state)	const		= 0;
 
 	/**
 	\brief Returns the controller's internal statistics.
-
 	\param[out] stats The controller's internal statistics
-
 	@see PxControllerStats
 	*/
 	virtual		void					getStats(PxControllerStats& stats)	const		= 0;
 
 	/**
 	\brief Resizes the controller.
-
 	This function attempts to resize the controller to a given size, while making sure the bottom
 	position of the controller remains constant. In other words the function modifies both the
 	height and the (center) position of the controller. This is a helper function that can be used
 	to implement a 'crouch' functionality for example.
-
+    此函数尝试将控制器调整为给定大小，同时确保控制器的底部位置保持不变。 
+    换句话说，该功能修改了控制器的高度和（中心）位置。 这是一个辅助函数，比如可用于实现“蹲伏”功能。
 	\param[in] height Desired controller's height
 	*/
 	virtual		void					resize(PxReal height)	= 0;

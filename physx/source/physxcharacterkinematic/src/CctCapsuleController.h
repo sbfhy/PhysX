@@ -95,7 +95,7 @@ namespace Cct
 		virtual	bool						setRadius(PxF32 radius);
 		virtual	bool						setHeight(PxF32 height);
 		virtual	bool						setClimbingMode(PxCapsuleClimbingMode::Enum);
-		//~ PxCapsuleController
+		//~PxCapsuleController
 
 				void						getCapsule(PxExtendedCapsule& capsule)		const;
 
