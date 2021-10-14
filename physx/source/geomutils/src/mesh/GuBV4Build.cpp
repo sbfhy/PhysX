@@ -233,7 +233,7 @@ static bool local_Subdivide(AABBTreeNode* PX_RESTRICT node, const PxBounds3* PX_
 	return true;
 }
 
-static void local_BuildHierarchy(AABBTreeNode* PX_RESTRICT node, const PxBounds3* PX_RESTRICT Boxes, const PxVec3* PX_RESTRICT centers, BuildStats& stats, const AABBTreeNode* const PX_RESTRICT node_base, PxU32 limit)
+static void local_BuildHierarchy(AABBTreeNode* node, const PxBounds3* PX_RESTRICT Boxes, const PxVec3* PX_RESTRICT centers, BuildStats& stats, const AABBTreeNode* const node_base, PxU32 limit)
 {
 	if(local_Subdivide(node, Boxes, centers, stats, node_base, limit))
 	{
