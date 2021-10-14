@@ -2062,12 +2062,18 @@ void Controller::findTouchedObject(const PxControllerFilters& filters, const PxO
 	// PT: the CCT works perfectly on statics without this extra mechanism, so we only raycasts against dynamics.
 	// The pre-filter callback is used to filter out our own proxy actor shapes. We need to make sure our own filter
 	// doesn't disturb the user-provided filter(s).
+    // PT：CCT 在没有这种额外机制的情况下可以完美地处理静态，所以我们只针对动态进行光线投射。
+    // 前置过滤器回调用于过滤掉我们自己的代理actor形状。 我们需要确保我们自己的过滤器
+    // 不会干扰用户提供的过滤器。
 
 	// PT: for starter, if user doesn't want to collide against dynamics, we can skip the whole thing
+    // PT: 首先，如果用户不想与动力学发生碰撞，我们可以跳过整个过程
 	if(filters.mFilterFlags & PxQueryFlag::eDYNAMIC)
 	{
 		// PT: we use a local class instead of making "Controller" a PxQueryFilterCallback, since it would waste more memory.
 		// Ideally we'd have a C-style callback and a user-data pointer, instead of being forced to create a class.
+        // PT：我们使用本地类而不是使“Controller”成为 PxQueryFilterCallback，因为它会浪费更多内存。
+        // 理想情况下，我们应该有一个 C 风格的回调函数和一个用户数据指针，而不是被迫创建一个类。
 		class ControllerFilter : public PxQueryFilterCallback
 		{
 		public:
@@ -2078,10 +2084,12 @@ void Controller::findTouchedObject(const PxControllerFilters& filters, const PxO
 					return PxQueryHitType::eNONE;
 
 				// PT: we want to discard our own internal shapes only
+                // PT：我们只想丢弃我们自己的内部形状
 				if(mShapeHashSet->contains(const_cast<PxShape*>(shape)))
 					return PxQueryHitType::eNONE;
 
 				// PT: otherwise we revert to the user-callback, if it exists, and if users enabled that call
+                // PT: 否则我们将恢复到用户回调，如果它存在，并且用户启用了该调用
 				if(mUserFilterCallback && (mUserFilterFlags & PxQueryFlag::ePREFILTER))
 					return mUserFilterCallback->preFilter(filterData, shape, actor, queryFlags);
 
@@ -2091,6 +2099,7 @@ void Controller::findTouchedObject(const PxControllerFilters& filters, const PxO
 			PxQueryHitType::Enum	postFilter(const PxFilterData& filterData, const PxQueryHit& hit)
 			{
 				// PT: we may get called if users have asked for such a callback
+                // PT：如果用户要求这样的回调，我们可能会被调用
 				if(mUserFilterCallback && (mUserFilterFlags & PxQueryFlag::ePOSTFILTER))
 					return mUserFilterCallback->postFilter(filterData, hit);
 

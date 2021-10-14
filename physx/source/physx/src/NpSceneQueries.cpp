@@ -103,6 +103,7 @@ bool NpSceneQueries::overlap(
 
 	MultiQueryInput input(&geometry, &pose);
 	// we are not supporting cache for overlaps for some reason
+    // 由于某种原因，我们不支持缓存重叠
 	return multiQuery<PxOverlapHit>(input, hits, PxHitFlags(), NULL, filterData, filterCall, NULL);
 }
 
@@ -683,7 +684,7 @@ bool NpSceneQueries::multiQuery(
 {
 	const bool anyHit = (filterData.flags & PxQueryFlag::eANY_HIT) == PxQueryFlag::eANY_HIT;
 
-	if(HitTypeSupport<HitType>::IsRaycast == 0)
+	if(HitTypeSupport<HitType>::IsRaycast == 0)     // 检查位置pose
 	{
 		PX_CHECK_AND_RETURN_VAL(input.pose != NULL, "NpSceneQueries::overlap/sweep pose is NULL.", 0);
 		PX_CHECK_AND_RETURN_VAL(input.pose->isValid(), "NpSceneQueries::overlap/sweep pose is not valid.", 0);
@@ -693,22 +694,24 @@ bool NpSceneQueries::multiQuery(
 		PX_CHECK_AND_RETURN_VAL(input.getOrigin().isFinite(), "NpSceneQueries::raycast pose is not valid.", 0);
 	}
 
-	if(HitTypeSupport<HitType>::IsOverlap == 0)
+	if(HitTypeSupport<HitType>::IsOverlap == 0)     // 检查方向
 	{
 		PX_CHECK_AND_RETURN_VAL(input.getDir().isFinite(), "NpSceneQueries multiQuery input check: unitDir is not valid.", 0);
 		PX_CHECK_AND_RETURN_VAL(input.getDir().isNormalized(), "NpSceneQueries multiQuery input check: direction must be normalized", 0);
 	}
 
-	if(HitTypeSupport<HitType>::IsRaycast)
+	if(HitTypeSupport<HitType>::IsRaycast)          // 检查距离 > 0
 	{
 		PX_CHECK_AND_RETURN_VAL(input.maxDistance > 0.0f, "NpSceneQueries::multiQuery input check: distance cannot be negative or zero", 0);
 	}
 
+    // 没有 eANY_HIT 标志的 PxScene::overlap() 和 PxBatchQuery::overlap() 调用需要一个碰撞buffer来返回结果
 	if(HitTypeSupport<HitType>::IsOverlap && !anyHit)
 	{
 		PX_CHECK_AND_RETURN_VAL(hits.maxNbTouches > 0, "PxScene::overlap() and PxBatchQuery::overlap() calls without eANY_HIT flag require a touch hit buffer for return results.", 0);
 	}
 
+    // sweep距离检查。零长度扫描仅在没有 PxHitFlag::eASSUME_NO_INITIAL_OVERLAP 标志的情况下有效
 	if(HitTypeSupport<HitType>::IsSweep)
 	{
 		PX_CHECK_AND_RETURN_VAL(input.maxDistance >= 0.0f, "NpSceneQueries multiQuery input check: distance cannot be negative", 0);
@@ -716,6 +719,7 @@ bool NpSceneQueries::multiQuery(
 			"NpSceneQueries multiQuery input check: zero-length sweep only valid without the PxHitFlag::eASSUME_NO_INITIAL_OVERLAP flag", 0);
 	}
 
+    // cache, shape, actor检查
 	PX_CHECK_MSG(!cache || (cache && cache->shape && cache->actor), "Raycast cache specified but shape or actor pointer is NULL!");
 	PxU32 cachedCompoundId = INVALID_PRUNERHANDLE;
 	const PrunerData cacheData = cache ? NpActor::getShapeManager(*cache->actor)->findSceneQueryData(*static_cast<NpShape*>(cache->shape), cachedCompoundId) : SQ_INVALID_PRUNER_DATA;
@@ -723,24 +727,30 @@ bool NpSceneQueries::multiQuery(
 	// this function is logically const for the SDK user, as flushUpdates() will not have an API-visible effect on this object
 	// internally however, flushUpdates() changes the states of the Pruners in mSQManager
 	// because here is the only place we need this, const_cast instead of making SQM mutable
+    // 这个函数对于 SDK 用户来说在逻辑上是常量，因为flushUpdates() 在内部不会对这个对象产生 API 可见的影响，
+    // 但是flushUpdates() 改变了 mSQManager 中修剪器的状态，因为这是我们唯一需要这个的地方 , const_cast 而不是使 SQM 可变
 	const_cast<NpSceneQueries*>(this)->mSQManager.flushUpdates();
 
 #if PX_SUPPORT_PVD
 	CapturePvdOnReturn<HitType> pvdCapture(this, input, hitFlags, cache, filterData, filterCall, bfd, hits);
 #endif
 
+    // 析构函数将从该函数返回时执行回调
 	IssueCallbacksOnReturn<HitType> cbr(hits); // destructor will execute callbacks on return from this function
 	hits.hasBlock = false;
 	hits.nbTouches = 0;
 
+    // 当我们查看形状列表时，可以逐渐缩小
 	PxReal shrunkDistance = HitTypeSupport<HitType>::IsOverlap ? PX_MAX_REAL : input.maxDistance; // can be progressively shrunk as we go over the list of shapes
 	if(HitTypeSupport<HitType>::IsSweep)
 		shrunkDistance = PxMin(shrunkDistance, PX_MAX_SWEEP_DISTANCE);
 	MultiQueryCallback<HitType> pcb(*this, input, anyHit, hits, hitFlags, filterData, filterCall, shrunkDistance, bfd);
 
+    // 不要对可以返回触摸命中的查询使用缓存
 	if(cacheData!=SQ_INVALID_PRUNER_DATA && hits.maxNbTouches == 0) // don't use cache for queries that can return touch hits
 	{
 		// this block is only executed for single shape cache
+        // 此块仅针对单个形状缓存执行
 		const PrunerPayload& cachedPayload = mSQManager.getPayload(cachedCompoundId, cacheData);
 		pcb.mIsCached = true;
 		PxReal dummyDist;
@@ -750,15 +760,21 @@ bool NpSceneQueries::multiQuery(
 		{
 			// AP: for sweeps we cache the bounds because we need to know them for the test to clip the sweep to bounds
 			// otherwise GJK becomes unstable. The bounds can be used multiple times so this is an optimization.
+            // AP：对于扫描，我们缓存边界，因为我们需要知道它们以便测试将扫描剪切到边界，否则 GJK 会变得不稳定。 
+            // 边界可以多次使用，所以这是一种优化。
 			const ShapeData sd(*input.geometry, *input.pose, input.inflation);
 			pcb.mQueryShapeBounds = sd.getPrunerInflatedWorldAABB();
 			pcb.mQueryShapeBoundsValid = true;
 			pcb.mShapeData = &sd;
 			againAfterCache = pcb.invoke(dummyDist, cachedPayload);
 			pcb.mShapeData = NULL;
-		} else
-			againAfterCache = pcb.invoke(dummyDist, cachedPayload);
+		} 
+        else
+        {
+            againAfterCache = pcb.invoke(dummyDist, cachedPayload);
+        }
 		pcb.mIsCached = false;
+        // 如果缓存形状的 PxAgain 结果为 false（中止查询），则返回此处
 		if(!againAfterCache) // if PxAgain result for cached shape was false (abort query), return here
 			return hits.hasAnyHits();
 	}
@@ -782,6 +798,7 @@ bool NpSceneQueries::multiQuery(
 		if(again)
 			again = compoundPruner->raycast(input.getOrigin(), input.getDir(), pcb.mShrunkDistance, pcb, filterData.flags);
 
+        // 更新状态以避免重复 processTouches()
 		cbr.again = again; // update the status to avoid duplicate processTouches()
 		return hits.hasAnyHits();
 	}
@@ -801,6 +818,7 @@ bool NpSceneQueries::multiQuery(
 		if(again)
 			again = compoundPruner->overlap(sd, pcb, filterData.flags);
 
+        // 更新状态以避免重复 processTouches()
 		cbr.again = again; // update the status to avoid duplicate processTouches()
 		return hits.hasAnyHits();
 	}

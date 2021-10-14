@@ -87,6 +87,7 @@ public:
 	*/
 	PX_INLINE bool isValid() const;
 
+    PX_INLINE void reset();
 };
 
 PX_INLINE PxTolerancesScale::PxTolerancesScale():
@@ -98,6 +99,12 @@ PX_INLINE PxTolerancesScale::PxTolerancesScale():
 PX_INLINE bool PxTolerancesScale::isValid() const
 {
 	return length>0.0f;
+}
+
+PX_INLINE void PxTolerancesScale::reset()
+{
+    length = 0.0f;
+    speed = 0.0f;
 }
 
 #if !PX_DOXYGEN

@@ -347,11 +347,13 @@ PxFilterData 是用户可定义的数据，它被传递到碰撞过滤着色器�
 */
 struct PxFilterData
 {
-//= ATTENTION! =====================================================================================
+//= ATTENTION! 注意 =====================================================================================
 // Changing the data layout of this class breaks the binary serialization format.  See comments for 
 // PX_BINARY_SERIAL_VERSION.  If a modification is required, please adjust the getBinaryMetaData 
 // function.  If the modification is made on a custom branch, please change PX_BINARY_SERIAL_VERSION
 // accordingly.
+// 改变这个类的数据布局会破坏二进制序列化格式。 请参阅 PX_BINARY_SERIAL_VERSION 的注释。
+// 如需修改，请调整getBinaryMetaData函数。 如果在自定义分支上进行修改，请相应地更改 PX_BINARY_SERIAL_VERSION。
 //==================================================================================================
 
 	PX_INLINE PxFilterData(const PxEMPTY)

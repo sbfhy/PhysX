@@ -298,9 +298,9 @@ class CMakePreset:
                         os.environ['PM_clang_PATH'] + '/bin/clang'
                     outString = outString + ' -DCMAKE_CXX_COMPILER=' + \
                         os.environ['PM_clang_PATH'] + '/bin/clang++'
-                else:
-                    outString = outString + ' -DCMAKE_C_COMPILER=clang'
-                    outString = outString + ' -DCMAKE_CXX_COMPILER=clang++'
+                # else:
+                #     outString = outString + ' -DCMAKE_C_COMPILER=clang'
+                #     outString = outString + ' -DCMAKE_CXX_COMPILER=clang++'
             return outString
         elif self.targetPlatform == 'linuxAarch64':
             outString = outString + ' -DTARGET_BUILD_PLATFORM=linux'
