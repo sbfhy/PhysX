@@ -114,6 +114,13 @@ struct PxHeightFieldSample
 	@see PxHeightFieldGeometry materialIndex0 PxShape.setmaterials() PxShape.getMaterials()
 	*/
 	PxBitAndByte	materialIndex1;
+
+    void clear()
+    {
+        height = 0;
+        materialIndex0.clearBit();
+        materialIndex1.clearBit();
+    }
 };
 
 #if !PX_DOXYGEN

@@ -226,7 +226,11 @@ PxRigidStatic* SampleNorthPole::createHeightField(PxReal* heightmap, PxReal hfSc
 	PxU32 hfNumVerts = hfSize*hfSize;
 
 	PxHeightFieldSample* samples = (PxHeightFieldSample*)SAMPLE_ALLOC(sizeof(PxHeightFieldSample)*hfNumVerts);
-	memset(samples,0,hfNumVerts*sizeof(PxHeightFieldSample));
+	// memset(samples,0,hfNumVerts*sizeof(PxHeightFieldSample));
+    for (size_t i = 0; i < hfNumVerts; ++ i)
+    {
+        samples[i].clear();
+    }
 	
 	for(PxU32 x = 0; x < hfSize; x++)
 	for(PxU32 y = 0; y < hfSize; y++)

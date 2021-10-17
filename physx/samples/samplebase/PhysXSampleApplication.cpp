@@ -842,7 +842,7 @@ void PhysXSampleApplication::onRender()
                         strcat(strbuf, "  <PVD>");
 					if (mPause) 
 						// strncat(strbuf, "  <PAUSED>", 10);
-                        strcat(strbuf, "  <PAUSED>")
+                        strcat(strbuf, "  <PAUSED>");
 
 					renderer->print(x, y += yInc, strbuf, scale, shadowOffset, highlightTextColor);
 					y += yInc;

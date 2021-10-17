@@ -343,11 +343,11 @@ def getCommonParams():
     return outString
 
 def cleanupCompilerDir(compilerDirName):
-    if os.path.exists(compilerDirName):
-        if sys.platform == 'win32':
-            os.system('rmdir /S /Q ' + compilerDirName)
-        else:
-            shutil.rmtree(compilerDirName, True)
+    # if os.path.exists(compilerDirName):
+    #     if sys.platform == 'win32':
+    #         os.system('rmdir /S /Q ' + compilerDirName)
+    #     else:
+    #         shutil.rmtree(compilerDirName, True)
     if os.path.exists(compilerDirName) == False:
         os.makedirs(compilerDirName)
 

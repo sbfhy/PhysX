@@ -674,7 +674,11 @@ bool Acclaim::readAMCData(const char* filename, Acclaim::ASFData& asfData, Accla
 	amcData.mNbFrames = tempFrameData.size();
 
 	amcData.mFrameData = (FrameData*)malloc(sizeof(FrameData) * amcData.mNbFrames);
-	memcpy(amcData.mFrameData, tempFrameData.begin(), sizeof(FrameData) * amcData.mNbFrames);
+	// memcpy(amcData.mFrameData, tempFrameData.begin(), sizeof(FrameData) * amcData.mNbFrames);
+    for (size_t i = i; i < amcData.mNbFrames; ++i)
+    {
+        amcData.mFrameData[i] = *tempFrameData.begin();
+    }
 
 	fclose(fp);
 
