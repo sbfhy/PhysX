@@ -59,3 +59,48 @@ To build and run the Kapla Demo see [kaplademo/README.md](kaplademo/README.md).
 ## Acknowledgements
 
 This depot contains external third party open source software copyright their respective owners.  See [kaplademo/README.md](kaplademo/README.md) and [externals/README.md](externals/README.md) for details.
+
+## linux安装问题
+### 环境
+centOS7.9, x86_64, GCC8.3.1,  
+
+### 编译问题
+```
+每次编译都会重编  
+    ExternalProject_Add加上UPDATE_COMMAND ""  
+    cmake_generate_projects.py中cleanupCompilerDir清理函数注释掉  
+```
+
+### 编译错误
+```
+GuBV4Build.cpp local_BuildHierarchy函数有restrict关键字限定，但调用处没有严格遵守。  
+    去掉了restrict关键字。  
+
+GCC8以上报错-Werror=class-memaccess，不知道为啥，在cmake_generate_projects.py:330 getCommonParams()中添加-Wno-error=class-memaccess也没用???  
+    XnXmlSerialization.cpp:469 memset( &mScale, 0, sizeof( PxTolerancesScale ) );  对非凡类memset报错。  
+    AcclaimLoader.cpp:677 memcpy(amcData.mFrameData, tempFrameData.begin(), sizeof(FrameData) * amcData.mNbFrames);  
+    SampleNorthPoleBuilder.cpp:229 memset(samples,0,hfNumVerts*sizeof(PxHeightFieldSample));  
+
+externals/glew-linux/include/GL/glew.h:1202:14: fatal error: GL/glu.h: 没有那个文件或目录  
+    SamplePlatform.cmake添加包含头文件TARGET_INCLUDE_DIRECTORIES(SamplePlatfor PRIVATE ${PM_opengllinux_PATH}/include)  
+        cmake_generate_projects.py getCommonParams()中要加上PM_opengllinux_PATH路径  
+
+-Werror=stringop-overflow=  
+    PhysXSampleApplication.cpp:841 error: ‘char* strncat(char*, const char*, size_t)’ specified bound 7 equals source length  
+        改成了strcat  
+
+SampleVehicle.cpp:1097:14: error: ‘physx::PxU32 GetFileSize(const char*)’ defined but not used [-Werror=unused-function] 
+    SampleVehicle.cpp中的 GetFileSize, getPlatformName 函数注释掉  
+    应该加-Wno-unused-function也可以的，但试了没用???
+```
+
+### 库问题
+库找不到依赖，ldd查看，没有的要安装[Packages Search for Linux and Unix](https://pkgs.org/)  
+```
+externals/opengl-linux/lib64/libGL.so   
+externals/opengl-linux/lib64/libXmu.so  
+libX11-devel  
+libXxf86vm-devel  
+    /usr/include/X11/extensions/xf86vmode.h  
+```
+

@@ -1064,18 +1064,18 @@ void SampleVehicle::createStandardMaterials()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-static const char* getPlatformName()
-{
-#if PX_X86
-	return "PC32";
-#elif PX_X64
-	return "PC64";
-#elif PX_ARM_FAMILY
-	return "ARM";
-#else
-	return "";
-#endif
-}
+// static const char* getPlatformName()
+// {
+// #if PX_X86
+// 	return "PC32";
+// #elif PX_X64
+// 	return "PC64";
+// #elif PX_ARM_FAMILY
+// 	return "ARM";
+// #else
+// 	return "";
+// #endif
+// }
 
 const char* SampleVehicle::getFocusVehicleName()
 {
@@ -1094,22 +1094,22 @@ const char* SampleVehicle::getFocusVehicleName()
 	}
 }
 
-static PxU32 GetFileSize(const char* name)
-{
-	if(!name)	return 0;
+// static PxU32 GetFileSize(const char* name)
+// {
+// 	if(!name)	return 0;
 
-#ifndef SEEK_END
-#define SEEK_END 2
-#endif
+// #ifndef SEEK_END
+// #define SEEK_END 2
+// #endif
 
-	SampleFramework::File* fp;
-	if (PxToolkit::fopen_s(&fp, name, "rb"))
-		return 0;
-	fseek(fp, 0, SEEK_END);
-	PxU32 eof_ftell = (PxU32)ftell(fp);
-	fclose(fp);
-	return eof_ftell;
-}
+// 	SampleFramework::File* fp;
+// 	if (PxToolkit::fopen_s(&fp, name, "rb"))
+// 		return 0;
+// 	fseek(fp, 0, SEEK_END);
+// 	PxU32 eof_ftell = (PxU32)ftell(fp);
+// 	fclose(fp);
+// 	return eof_ftell;
+// }
 
 void SampleVehicle::createVehicles()
 {	

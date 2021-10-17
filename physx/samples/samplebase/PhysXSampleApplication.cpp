@@ -838,9 +838,11 @@ void PhysXSampleApplication::onRender()
 					mRunning->getPathName(strbuf, sizeof strbuf - 1, true);
 
 					if (mSample->isConnectedPvd())
-						strncat(strbuf, "  <PVD>", 7);
+						// strncat(strbuf, "  <PVD>", 7);
+                        strcat(strbuf, "  <PVD>");
 					if (mPause) 
-						strncat(strbuf, "  <PAUSED>", 10);
+						// strncat(strbuf, "  <PAUSED>", 10);
+                        strcat(strbuf, "  <PAUSED>")
 
 					renderer->print(x, y += yInc, strbuf, scale, shadowOffset, highlightTextColor);
 					y += yInc;

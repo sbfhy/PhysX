@@ -58,6 +58,8 @@ TARGET_INCLUDE_DIRECTORIES(SamplePlatform
 
 	PRIVATE ${PHYSX_ROOT_DIR}/include
 	PRIVATE ${PHYSX_ROOT_DIR}/source/common/src
+    
+    PRIVATE ${PM_opengllinux_PATH}/include 
 )
 
 TARGET_COMPILE_DEFINITIONS(SamplePlatform 
